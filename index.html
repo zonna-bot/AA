@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>銀髮族 AI 圖片創意遊樂場</title>
+<style>
+  :root{
+    --paper:#EEE5D1;
+    --panel:#FBF7EC;
+    --ink:#1F2B33;
+    --ink-soft:#4A5963;
+    --line:#B9AC8F;
+    --primary:#17495C;
+    --primary-dark:#0E3140;
+    --gold:#FFD65A;
+    --ok:#1E6B44;
+    --warn-bg:#FFF1C9;
+    --warn-ink:#6B4300;
+    --focus:#C2410C;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+
+  /* 以 1920 x 1080 為基準，畫面縮放時整體等比例跟著變 */
+  html{font-size:clamp(13px, min(0.8333vw, 1.4815vh), 24px)}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+    line-height:1.4;
+  }
+  button{font-family:inherit; color:inherit}
+  :focus-visible{outline:.25rem solid var(--focus); outline-offset:.12rem}
+
+  .app{
+    height:100vh;
+    min-height:44rem;
+    display:flex;
+    flex-direction:column;
+    gap:.55rem;
+    padding:.6rem 1rem .8rem;
+  }
+  header{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    column-gap:1.6rem;
+    padding:0 .3rem;
+  }
+  h1{
+    margin:0;
+    font-size:2.3rem;
+    font-weight:800;
+    letter-spacing:.05em;
+    color:var(--primary-dark);
+  }
+  .sub{margin:0; font-size:1.35rem; color:var(--ink-soft); font-weight:600}
+
+  main{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:42fr 23fr 35fr;
+    gap:.8rem;
+  }
+  .panel{
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    background:var(--panel);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:.7rem .8rem .8rem;
+  }
+  .panel.nudge{outline:.3rem solid var(--focus); outline-offset:.1rem}
+  .panel h2{
+    margin:0 0 .55rem;
+    font-size:1.55rem;
+    font-weight:800;
+    color:var(--primary-dark);
+  }
+
+  /* ---------- ① 主題 ---------- */
+  .theme-scroll{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:.5rem;
+    padding-right:.15rem;
+  }
+  .cat{
+    display:grid;
+    grid-template-columns:2.7rem 1fr;
+    gap:.4rem;
+    flex:none;
+  }
+  .rail{
+    writing-mode:vertical-rl;
+    text-orientation:upright;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.15rem;
+    background:var(--cat);
+    color:#fff;
+    border-radius:10px;
+    font-size:1.2rem;
+    font-weight:800;
+    letter-spacing:.08em;
+    padding:.3rem 0;
+  }
+  .theme-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:.4rem;
+  }
+  .theme-btn{
+    display:flex;
+    align-items:center;
+    gap:.35rem;
+    min-height:3.3rem;
+    padding:.2rem .45rem;
+    font-size:1.25rem;
+    font-weight:700;
+    line-height:1.1;
+    text-align:left;
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .theme-btn .no{flex:none; font-weight:800; color:var(--cat)}
+  .theme-btn:hover{border-color:var(--primary); background:#F1F7F9}
+  .theme-btn[aria-pressed="true"]{
+    background:var(--primary);
+    border-color:var(--primary-dark);
+    color:#fff;
+    box-shadow:0 0 0 .18rem var(--gold);
+  }
+  .theme-btn[aria-pressed="true"] .no{color:var(--gold)}
+
+  /* ---------- ② 風格 ---------- */
+  .style-list{display:flex; flex-direction:column; gap:.4rem}
+  .style-btn{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    min-height:3.5rem;
+    padding:.3rem .8rem;
+    font-size:1.4rem;
+    font-weight:700;
+    text-align:left;
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .style-btn .no{font-weight:800; color:var(--ink-soft)}
+  .style-btn:hover{border-color:var(--primary); background:#F1F7F9}
+  .style-btn[aria-pressed="true"]{
+    background:var(--primary);
+    border-color:var(--primary-dark);
+    color:#fff;
+    box-shadow:0 0 0 .18rem var(--gold);
+  }
+  .style-btn[aria-pressed="true"] .no{color:var(--gold)}
+
+  .summary{
+    margin-top:auto;
+    padding:.7rem .8rem;
+    background:#fff;
+    border:2px dashed var(--line);
+    border-radius:12px;
+    font-size:1.2rem;
+  }
+  .summary .label{margin:0 0 .35rem; font-size:1.1rem; font-weight:800; color:var(--ink-soft)}
+  .summary .line{margin:0 0 .25rem; font-weight:700}
+  .summary .desc{margin:0 0 .25rem; font-size:1.1rem; color:var(--ink-soft)}
+  .summary .empty{margin:0; font-weight:700; color:var(--warn-ink)}
+  .summary .tip{margin:.4rem 0 0; padding:.35rem .5rem; font-size:1.05rem; background:var(--warn-bg); color:var(--warn-ink); border-radius:8px}
+
+  /* ---------- ③ 產生 ---------- */
+  .gen{
+    width:100%;
+    height:4.3rem;
+    flex:none;
+    font-size:1.6rem;
+    font-weight:800;
+    letter-spacing:.06em;
+    color:#fff;
+    background:var(--primary);
+    border:0;
+    border-radius:14px;
+    box-shadow:0 .3rem 0 var(--primary-dark);
+    cursor:pointer;
+  }
+  .gen:hover{background:#1D5A71}
+  .gen:active{transform:translateY(.2rem); box-shadow:0 .1rem 0 var(--primary-dark)}
+
+  .notice{
+    margin:.6rem 0 0;
+    padding:.5rem .7rem;
+    font-size:1.25rem;
+    font-weight:700;
+    background:var(--warn-bg);
+    color:var(--warn-ink);
+    border-radius:10px;
+  }
+
+  .howto{margin-top:.9rem; flex:1; min-height:0; overflow-y:auto}
+  .howto h3{margin:0 0 .5rem; font-size:1.4rem; font-weight:800}
+  .howto ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.4rem}
+  .howto li{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    padding:.35rem .6rem;
+    font-size:1.35rem;
+    font-weight:600;
+    background:#fff;
+    border:2px solid transparent;
+    border-radius:10px;
+  }
+  .howto li .n{
+    flex:none;
+    width:2.2rem;
+    height:2.2rem;
+    display:grid;
+    place-items:center;
+    font-size:1.2rem;
+    font-weight:800;
+    color:var(--primary-dark);
+    background:#DCE8EC;
+    border-radius:50%;
+  }
+  .howto li.done .n{background:var(--ok); color:#fff}
+  .howto li.now{border-color:var(--primary); background:#EAF3F6}
+  .howto li .tag{margin-left:auto; font-size:1.05rem; font-weight:700; color:var(--ok)}
+  .howto li.now .tag{color:var(--primary)}
+
+  .result{margin-top:.7rem; flex:1; min-height:0; display:flex; flex-direction:column; gap:.5rem}
+  .res-head h3{margin:0; font-size:1.6rem; font-weight:800; color:var(--primary-dark)}
+  .res-head p{margin:.1rem 0 0; font-size:1.25rem; font-weight:700; color:var(--ink-soft)}
+  .seg{display:grid; grid-template-columns:1fr 1fr; gap:.4rem; flex:none}
+  .seg button{
+    height:3.3rem;
+    font-size:1.4rem;
+    font-weight:800;
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .seg button:hover{border-color:var(--primary)}
+  .seg button[aria-pressed="true"]{background:var(--primary); border-color:var(--primary-dark); color:#fff}
+
+  .stale{
+    flex:none;
+    margin:0;
+    padding:.4rem .7rem;
+    font-size:1.2rem;
+    font-weight:800;
+    background:var(--warn-bg);
+    color:var(--warn-ink);
+    border-radius:10px;
+  }
+  .prompt-box{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    margin:0;
+    padding:.7rem .9rem;
+    font-size:1.25rem;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+    background:#fff;
+    border:2px solid var(--primary);
+    border-radius:12px;
+  }
+  .prompt-box.dim{opacity:.4; border-color:var(--line)}
+  .count{flex:none; margin:0; font-size:1.05rem; color:var(--ink-soft); font-weight:600}
+  .res-tip{flex:none; margin:0; padding:.35rem .6rem; font-size:1.1rem; background:var(--warn-bg); color:var(--warn-ink); border-radius:8px}
+  .copy{
+    flex:none;
+    height:3.8rem;
+    font-size:1.5rem;
+    font-weight:800;
+    color:#fff;
+    background:var(--ok);
+    border:0;
+    border-radius:12px;
+    box-shadow:0 .25rem 0 #14492E;
+    cursor:pointer;
+  }
+  .copy:hover{background:#25794F}
+  .copy:active{transform:translateY(.15rem); box-shadow:0 .1rem 0 #14492E}
+  .copy:disabled{background:#9AA5A0; box-shadow:0 .25rem 0 #74807A; cursor:not-allowed}
+  .copy.done{background:var(--primary)}
+  .next{flex:none; margin:0; font-size:1.15rem; font-weight:700; color:var(--ink-soft)}
+
+  @media (prefers-reduced-motion:no-preference){
+    .theme-btn,.style-btn,.seg button,.gen,.copy{transition:background-color .12s, border-color .12s}
+  }
+
+  /* 小螢幕（手機、平板直向）：改成上下排列，可捲動 */
+  @media (max-width:1100px){
+    html{font-size:16px}
+    .app{height:auto}
+    main{grid-template-columns:1fr; grid-auto-rows:auto}
+    .theme-scroll{overflow:visible}
+    .theme-grid{grid-template-columns:repeat(2,1fr)}
+    .howto,.result{flex:none}
+    .prompt-box{min-height:14rem}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>銀髮族 AI 圖片創意遊樂場</h1>
+    <p class="sub">50種有趣 AI 圖片玩法，點一點就能產生提示詞！</p>
+  </header>
+
+  <main>
+    <!-- 左：主題 -->
+    <section class="panel" id="themePanel" aria-labelledby="themeTitle">
+      <h2 id="themeTitle">① 選一個有趣主題</h2>
+      <div class="theme-scroll" id="themeScroll"></div>
+    </section>
+
+    <!-- 中：風格 -->
+    <section class="panel" aria-labelledby="styleTitle">
+      <h2 id="styleTitle">② 選一種圖片風格</h2>
+      <div class="style-list" id="styleList"></div>
+      <div class="summary" aria-live="polite">
+        <p class="label">你現在選的</p>
+        <div id="summaryBody"></div>
+      </div>
+    </section>
+
+    <!-- 右：產生 -->
+    <section class="panel" aria-labelledby="outTitle">
+      <h2 id="outTitle">③ 產生 AI 提示詞</h2>
+      <button type="button" class="gen" id="genBtn">產生我的 AI 提示詞</button>
+      <p class="notice" id="notice" role="alert" hidden></p>
+
+      <div class="howto" id="howto">
+        <h3>接下來這樣做</h3>
+        <ol>
+          <li data-step="1"><span class="n">①</span>選一個有趣主題<span class="tag"></span></li>
+          <li data-step="2"><span class="n">②</span>選一種圖片風格<span class="tag"></span></li>
+          <li data-step="3"><span class="n">③</span>按「產生我的 AI 提示詞」<span class="tag"></span></li>
+          <li data-step="4"><span class="n">④</span>按「複製提示詞」<span class="tag"></span></li>
+          <li data-step="5"><span class="n">⑤</span>打開 Gemini 或 ChatGPT<span class="tag"></span></li>
+          <li data-step="6"><span class="n">⑥</span>上傳自己的照片<span class="tag"></span></li>
+          <li data-step="7"><span class="n">⑦</span>貼上提示詞，按送出<span class="tag"></span></li>
+        </ol>
+      </div>
+
+      <div class="result" id="result" hidden>
+        <div class="res-head">
+          <h3>你的 AI 圖片提示詞</h3>
+          <p>Gemini ＋ ChatGPT 通用</p>
+        </div>
+        <div class="seg">
+          <button type="button" id="modeFull" aria-pressed="true">完整提示詞</button>
+          <button type="button" id="modeShort" aria-pressed="false">簡潔提示詞</button>
+        </div>
+        <p class="stale" id="stale" hidden>你換了選擇，請再按一次上面的「產生我的 AI 提示詞」。</p>
+        <div class="prompt-box" id="promptBox" tabindex="0" aria-live="polite"></div>
+        <p class="count" id="count"></p>
+        <p class="res-tip" id="resTip" hidden></p>
+        <button type="button" class="copy" id="copyBtn">複製提示詞</button>
+        <p class="next">複製後：打開 Gemini 或 ChatGPT，先上傳自己的照片，再貼上提示詞。</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- =====================================================================
+     資料區：想新增第 51 個主題，只要在 THEMES 最後面照格式加一筆就好。
+     想新增風格，就在 STYLES 加一筆。畫面會自動長出新按鈕。
+     ===================================================================== -->
+<script id="data">
+/* 主題分類（letter 要和 THEMES 裡的 category 對得上） */
+const CATEGORIES = [
+  { letter: "A", name: "藝術變身", color: "#6E4A86" },
+  { letter: "B", name: "公仔與玩具", color: "#2E7150" },
+  { letter: "C", name: "電影與故事", color: "#96354E" },
+  { letter: "D", name: "時空穿越", color: "#2A6791" },
+  { letter: "E", name: "趣味創意", color: "#8E6114" }
+];
+
+/* 10 種圖片風格
+   full  = 完整提示詞用的風格描述（材質、筆觸、光線、邊緣、色彩、立體感、表面質感）
+   short = 簡潔提示詞用的風格描述 */
+const STYLES = [
+  { id: "01", name: "寫實照片風", full: "真實攝影質感，自然皮膚與布料材質，真實光影，自然景深，像專業相機拍攝", short: "真實攝影質感、自然景深" },
+  { id: "02", name: "3D Q版", full: "3D Q版立體模型，大頭小身、圓潤比例，精緻材質，柔和陰影，收藏公仔質感，仍有本人辨識度", short: "3D Q版、大頭小身、圓潤精緻" },
+  { id: "03", name: "日系手繪", full: "日系手繪，細緻線條與輕盈筆觸，柔和色彩，溫暖光線，簡單背景，自然留白", short: "日系手繪、柔和色彩、自然留白" },
+  { id: "04", name: "水彩畫", full: "透明水彩，紙張紋理，顏料暈染，邊緣柔和，淡雅色彩，手繪筆觸，自然留白", short: "透明水彩、紙張紋理、暈染" },
+  { id: "05", name: "油畫", full: "厚重油彩，畫布紋理，明顯筆觸，豐富色彩，古典光影，立體感強", short: "厚重油畫、畫布筆觸、古典光影" },
+  { id: "06", name: "漫畫", full: "漫畫風格，清楚線稿，強烈輪廓，分鏡感構圖，生動表情，適度陰影", short: "漫畫風、清楚線稿、強烈輪廓" },
+  { id: "07", name: "黏土公仔", full: "手工黏土質感，柔軟圓潤，表面有細微指痕，收藏公仔比例，仍有本人辨識度", short: "手工黏土質感、柔軟圓潤" },
+  { id: "08", name: "毛氈手作", full: "毛氈纖維質感，柔軟蓬鬆，可見手工縫線，溫暖色調，手作溫度", short: "毛氈手作、柔軟纖維、縫線" },
+  { id: "09", name: "立體紙雕", full: "多層立體紙雕，切割紙緣清楚，層層紙張陰影，立體堆疊，手工紙藝質感", short: "多層立體紙雕、紙張陰影" },
+  { id: "10", name: "電影級質感", full: "電影級質感，戲劇性電影燈光，電影攝影機構圖，淺景深，高質感場景，自然人物細節", short: "電影級質感、戲劇光影、淺景深" }
+];
+
+/* 「人物保留規則」：不同主題可以選不同模式（idMode），預設是 normal
+   normal    一般主題：完全保留本人長相與年齡感
+   timeline  時光主題：現在的自己不變，其他年紀的自己合理變化
+   petSwap   人物與寵物互換：兩張照片都要保留特徵
+   petPhoto  寵物變成人：以寵物照片為主 */
+const IDENTITY = {
+  normal: {
+    full: "請以我接下來提供的人物照片作為唯一人物參考，保留人物原本的臉型、五官比例、髮型、髮色、膚色、年齡感與自然神韻，讓人物仍有清楚的本人辨識度。",
+    short: "保留照片中人物的臉型、五官、髮型與年齡感。"
+  },
+  timeline: {
+    full: "請以我接下來提供的人物照片作為人物參考：現在的自己保留原本的臉型、五官比例、髮色與自然神韻；不同年紀的自己依合理的年齡變化，但五官特徵一致，一看就是同一個人。",
+    short: "保留照片中人物的五官特徵，不同年紀仍是同一人。"
+  },
+  petSwap: {
+    full: "請以我接下來提供的人物與寵物照片作為唯一參考：人物保留臉型、五官、髮型與年齡感，寵物保留毛色、花紋、眼神與體型，兩者都要有清楚的辨識度。",
+    short: "保留人物與寵物照片中的臉部與毛色特徵。"
+  },
+  petPhoto: {
+    full: "請以我接下來提供的寵物照片作為唯一參考，保留寵物的毛色、花紋、眼神與個性，自然轉化成人類角色的髮色、服裝配色與神韻，讓人一看就知道是牠。",
+    short: "參考寵物照片的毛色、花紋與神韻。"
+  }
+};
+
+/* 風格接在主題後面的連接語（type：art 藝術畫風／craft 手作玩具／scene 一般場景） */
+const CONNECTORS = {
+  art: "藝術語言為底，再融合這種質感：",
+  craft: "再以下列風格表現這件作品：",
+  scene: "圖片風格："
+};
+
+/* 每個提示詞最後的「人物完整性」句子，輪流使用，避免每個都一樣 */
+const TAILS = ["避免多餘手指與肢體變形", "避免臉部變形與五官錯位", "避免人物被裁切或比例失真"];
+
+/* 50 個主題
+   completePrompt  完整提示詞的主題段落（動作、姿勢、服裝、場景、道具、光線、色彩、構圖、鏡頭、氣氛）
+   shortPrompt     簡潔提示詞的主題段落
+   care            這個畫面專屬的人物完整性提醒
+   tip（選填）     顯示給學生看的小提醒 */
+const THEMES = [
+  /* ===== A 藝術變身 ===== */
+  { id: "01", category: "A", type: "art", title: "波特羅圓胖藝術人物", description: "把人物變成圓潤誇張比例的藝術人物。",
+    completePrompt: "人物化為波特羅式的圓潤誇張體態，身形厚實飽滿，端坐在古典客廳的絨面扶手椅上，雙手捧著一杯熱茶，微微笑著；穿深色寬鬆毛衣，背景有金框畫作與花瓶；柔和暖色窗光，橘棕與酒紅色調，中景正面構圖，淺景深，厚重畫布筆觸，氣氛寧靜幽默。",
+    shortPrompt: "人物變成波特羅式圓胖藝術人物，坐古典客廳絨椅捧熱茶，暖色窗光，中景構圖",
+    care: "圓潤的是身體，臉仍是本人，雙手完整、手指正確" },
+  { id: "02", category: "A", type: "art", title: "星空藝術人物", description: "讓人物融入夢幻星空與流動筆觸。",
+    completePrompt: "人物站在夢幻夜空下的山坡，仰望並伸出一隻手，像要撫摸漩渦般流動的星河；穿深藍色長外套；天空由旋轉的金黃星點與靛紫筆觸構成，星光為人物勾出柔和輪廓，遠處有小村莊剪影；低角度全身構圖，氣氛浪漫寧靜。",
+    shortPrompt: "人物站在星空山坡，伸手觸碰旋轉流動的星河，深藍靛紫加金黃星光，低角度全身構圖",
+    care: "臉部清楚可辨，手臂與手掌完整，全身站姿自然" },
+  { id: "03", category: "A", type: "art", title: "浮世繪人物", description: "把人物變成日本古典版畫人物。",
+    completePrompt: "人物化為日本古典浮世繪人物，穿華麗和服，側身站在櫻花樹下的木橋上，手持團扇回望，姿態優雅；背景有平面化的海浪與遠山；粗細分明的黑色輪廓線，扁平色塊，靛藍、朱紅與米黃配色，均勻柔光，垂直版畫構圖，角落有小小的紅色印章造型。",
+    shortPrompt: "人物成為浮世繪版畫人物，穿和服站櫻花木橋回望，黑色輪廓線，靛藍朱紅色塊",
+    care: "臉部保持可辨識的四分之三側面，持扇雙手完整自然" },
+  { id: "04", category: "A", type: "art", title: "文藝復興貴族肖像", description: "把人物變成古典油畫中的貴族。",
+    completePrompt: "人物成為文藝復興時期的貴族肖像，端坐在深色木椅，身體微側，雙手交疊放在腿上；穿黑色絲絨與金線刺繡的華服，配白色蕾絲領；背景是暗綠色帷幕與遠方風景窗；柔和側光打亮臉部，褐、金、深綠色調，半身穩重構圖，氣氛莊重。",
+    shortPrompt: "人物成為文藝復興貴族肖像，端坐木椅，黑絲絨華服白蕾絲領，柔和側光，半身構圖",
+    care: "臉部沉穩自然、保留本人年齡感，雙手交疊完整" },
+  { id: "05", category: "A", type: "art", title: "巴洛克宮廷肖像", description: "華麗服裝與戲劇性光影的古典肖像。",
+    completePrompt: "人物是巴洛克宮廷中的主角，站在大理石廳堂，一手扶著雕花椅背，另一手優雅伸向前方；穿寶藍與金色刺繡的華麗禮服，配披風與珠寶；背後有厚重的紅色天鵝絨帷幕與大吊燈；強烈明暗對比的側光，深紅、金、黑色調，微仰視構圖，氣氛華麗莊嚴。",
+    shortPrompt: "人物成為巴洛克宮廷主角，寶藍金色禮服，紅絨帷幕與吊燈，戲劇側光，微仰視構圖",
+    care: "服飾華麗但臉仍是主角，雙手完整、手指正確" },
+  { id: "06", category: "A", type: "art", title: "印象派人物", description: "柔和筆觸與自然光線的人物畫。",
+    completePrompt: "人物撐著淺色陽傘，站在開滿罌粟花的午後草地，微風吹動衣角與帽緣，回頭微笑；穿白色長罩衫與草帽，遠處有樹林與雲，陽光透過樹葉灑下斑駁光點；細碎短促的筆觸，粉綠、淡藍、鵝黃色調，中景略仰角構圖，氣氛輕盈明亮。",
+    shortPrompt: "人物撐陽傘站在開滿花的午後草地回頭微笑，細碎筆觸，明亮自然光，中景構圖",
+    care: "臉部在光影中仍清楚，握傘的手完整、手指正確" },
+  { id: "07", category: "A", type: "art", title: "波普藝術人物", description: "鮮明色塊與現代藝術海報感。",
+    completePrompt: "人物以四格拼貼的現代波普海報呈現，每格配色不同（亮黃、桃紅、天藍、橘），手勢各異，有比讚、比耶與大笑；穿簡單的純色上衣；背景是粗網點與鮮明色塊，黑色粗輪廓線，均勻平面打光，置中對稱構圖，氣氛活潑，不要出現亂碼文字。",
+    shortPrompt: "人物成為四格波普海報，每格換色與手勢，粗網點色塊，粗黑輪廓，置中構圖",
+    care: "四格中的臉部特徵一致，雙手完整、手指正確" },
+  { id: "08", category: "A", type: "art", title: "超現實夢境人物", description: "進入不可能存在的夢幻世界。",
+    completePrompt: "人物漫步在不可能存在的夢境：腳下是漂浮的棋盤地面，天空掛著融化的時鐘與巨大的雲朵，身旁有長著樹葉的樓梯；穿樸素長外套，一手推開半空中的一扇門，神情好奇；日落般的橙粉與青綠色調，柔和神祕的光，遠景廣角構圖，氣氛奇幻安靜。",
+    shortPrompt: "人物漫步漂浮棋盤地面，天空有融化時鐘，推開半空中的門，橙粉色調，廣角構圖",
+    care: "人物寫實自然、比例正常，只有周圍物件是超現實" },
+  { id: "09", category: "A", type: "art", title: "立體派人物", description: "用幾何形狀重新組合人物臉部與身體。",
+    completePrompt: "人物的臉部與身體以立體派手法拆解成幾何面塊，同時呈現正面與側面，仍能認出本人；坐在簡單的桌前，手拿一本書，穿格紋襯衫；背景為交疊的三角形與菱形色塊；赭石、灰藍、墨綠與米色調，平均散射光，正面平視構圖，氣氛沉靜藝術。",
+    shortPrompt: "人物以立體派幾何面塊呈現，坐桌前拿書，赭石灰藍色調，散射光，正面平視構圖",
+    care: "幾何拆解不破壞五官比例，仍可辨識本人，手指正確" },
+  { id: "10", category: "A", type: "art", title: "水墨畫人物", description: "變成東方水墨藝術中的人物。",
+    completePrompt: "人物化為東方水墨畫人物，穿寬袖長衫，在雲霧繚繞的山水間拄杖行走，回頭望向遠方，旁有松樹、瀑布與小亭；濃淡乾濕的墨色變化與飛白筆觸，大量留白，只用少許淡赭與朱紅點綴；遠景全身構圖，氣氛悠遠寧靜。",
+    shortPrompt: "人物成為水墨人物，寬袖長衫拄杖行走於雲霧山水，大量留白，遠景全身構圖",
+    care: "臉部以細膩淡墨保留本人辨識度，拄杖的手完整" },
+
+  /* ===== B 公仔與玩具 ===== */
+  { id: "11", category: "B", type: "craft", title: "3D Q版收藏公仔", description: "把人物變成可愛的高質感3D收藏公仔。",
+    completePrompt: "人物成為高質感3D收藏公仔，大頭小身，站在簡潔的圓形展示底座上，一手揮手打招呼；穿與照片相近的日常服裝，配一個小背包；柔和攝影棚燈光，淺灰漸層背景，粉彩色調，正面微俯拍構圖，淺景深，氣氛可愛療癒。",
+    shortPrompt: "人物成為3D收藏公仔，站圓形展示底座揮手，柔和棚燈，粉彩背景，正面微俯拍",
+    care: "五官與髮型仍像本人，雙手完整、手指正確，全身入鏡" },
+  { id: "12", category: "B", type: "craft", title: "玩具盒裡的自己", description: "變成展示盒中的限量收藏玩具。",
+    completePrompt: "人物成為限量收藏玩具，站在透明展示盒中，盒內有底座、小配件、名字標籤與收藏卡設計；穿與照片相近的服裝，姿勢像玩具般定格，一手拿小道具；攝影棚打光，塑膠盒面有反光，紅黃藍鮮明包裝色，正面置中構圖，微距鏡頭，淺景深；標籤只用簡短文字，避免大量亂碼。",
+    shortPrompt: "人物成為透明展示盒中的限量玩具，附配件與名字標籤，棚拍打光，紅黃藍包裝色",
+    care: "玩具比例自然、臉像本人，配件不遮住臉，手指正確" },
+  { id: "13", category: "B", type: "craft", title: "黏土公仔", description: "變成手工黏土製作的小人物。",
+    completePrompt: "人物化為手工黏土公仔，圓潤矮胖，坐在木桌上，雙手捧著一朵小花，表情溫和；穿黏土捏出的日常服裝，表面有輕微指痕與小凹痕；旁邊有小盆栽與調色黏土；暖黃桌燈側光，粉彩色調，微距近拍，淺景深，氣氛溫馨手作。",
+    shortPrompt: "人物成為手工黏土公仔，坐木桌捧小花，暖黃桌燈，微距近拍，淺景深",
+    care: "黏土臉部保留本人五官與髮型，手與手指完整" },
+  { id: "14", category: "B", type: "craft", title: "毛氈娃娃", description: "變成柔軟可愛的手工毛氈娃娃。",
+    completePrompt: "人物化為羊毛氈娃娃，蓬鬆柔軟，坐在手工縫製的小藤籃裡，抱著一顆毛氈愛心；穿毛氈縫製的日常服裝，鈕扣是小圓珠，可見細縫線與毛絮；周圍有毛線球、針線盒與小花；窗邊柔和自然光，奶油、粉綠與暖橘色調，近景微俯拍，淺景深，氣氛溫暖。",
+    shortPrompt: "人物成為羊毛氈娃娃，坐小藤籃抱毛氈愛心，窗邊柔光，奶油粉綠色調，近景微俯拍",
+    care: "毛氈臉部簡化但抓住本人髮型與特徵，手部自然" },
+  { id: "15", category: "B", type: "craft", title: "木頭雕刻人偶", description: "變成手工雕刻的木製人物。",
+    completePrompt: "人物化為手工雕刻的木製人偶，關節有小榫接，站在木工桌上，一手扶著小木槌，像剛完成的作品；穿雕出摺紋的衣服，木紋清楚，表面有刀痕與蜂蠟光澤；旁有刨花、雕刻刀與小木塊；工作室暖色側光，胡桃與淺橡木色調，微距構圖，淺景深，氣氛質樸溫暖。",
+    shortPrompt: "人物成為手工木雕人偶，站木工桌拿小木槌，暖色側光，木紋清楚，微距構圖",
+    care: "木雕臉部仍有本人五官與髮型輪廓，手指與關節完整" },
+  { id: "16", category: "B", type: "craft", title: "紙雕立體人物", description: "變成多層次立體紙雕作品。",
+    completePrompt: "人物化為多層次立體紙雕，站在紙做的小花園場景中，前景是花草，中景是人物，背景是山丘與雲朵，一手拿著紙花；穿紙層堆疊出的服裝，切割邊緣清楚，層層之間有柔和陰影；由上方打光，粉藍、薄荷綠與暖黃色調，正面深度構圖，氣氛童趣精緻。",
+    shortPrompt: "人物成為多層紙雕，站紙花園拿紙花，上方打光，粉藍薄荷色調，正面深度構圖",
+    care: "紙層勾出本人臉型與髮型，手指清楚，不被前景遮住" },
+  { id: "17", category: "B", type: "craft", title: "LEGO積木人物", description: "變成積木人物與積木城市。",
+    completePrompt: "人物化為LEGO風格積木人物，方塊手腳與圓柱頭，站在積木搭成的小城市街角，一手舉著積木咖啡杯揮手；穿印有簡單圖案的積木衣服，髮型用積木髮片表現；周圍有積木房屋、小樹與小汽車；明亮玩具攝影棚光，紅黃藍綠鮮明色，低角度構圖，淺景深，氣氛歡樂。",
+    shortPrompt: "人物成為LEGO風格積木人物，站積木城市街角舉咖啡杯，明亮棚光，低角度構圖",
+    care: "積木頭部的髮片、髮色與表情貼近本人，手部造型完整" },
+  { id: "18", category: "B", type: "craft", title: "橡皮擦雕刻人物", description: "變成精緻的小型雕刻作品。",
+    completePrompt: "人物化為橡皮擦雕刻出的小型作品，只有拇指大小，站在鉛筆盒旁的桌面，手拿小刻刀；淡粉色橡皮質地，表面有細緻刀痕與少許橡皮屑；周圍的鉛筆、尺與筆記本形成巨大背景；桌燈柔光，粉白與木色調，近距離微距構圖，淺景深，氣氛精巧安靜。",
+    shortPrompt: "人物成為拇指大小的橡皮擦雕刻，站鉛筆盒旁拿刻刀，桌燈柔光，微距構圖",
+    care: "橡皮雕像保留本人臉部特徵與髮型，手部細節完整" },
+  { id: "19", category: "B", type: "craft", title: "復古玩偶", description: "變成懷舊收藏玩偶。",
+    completePrompt: "人物化為懷舊的復古玩偶，布面與塑膠混合，坐在老式木書架前的小椅子上，雙手抱著舊泰迪熊；穿褪色的復古洋裝或襯衫，帶輕微磨損與泛黃感；背景有舊鐵盒、玻璃彈珠與老收音機；午後暖黃逆光，棕褐、奶油與復古綠色調，微俯拍，淺景深，氣氛懷舊溫柔。",
+    shortPrompt: "人物成為復古玩偶，坐老書架前抱舊泰迪熊，午後暖黃逆光，懷舊色調，微俯拍",
+    care: "玩偶臉部仍像本人，雙手完整自然、手指數量正確" },
+  { id: "20", category: "B", type: "craft", title: "精品公仔展示櫃", description: "成為高級收藏櫃中的主角公仔。",
+    completePrompt: "人物成為高級收藏櫃中的主角公仔，站在中央最亮的一層，擺出自信姿勢，一手叉腰；穿精緻細節的服裝並配專屬小配件；左右層架擺著較小的配角玩具，玻璃門有淡淡反光；LED聚光燈與底部暖光，深木色、金屬黑與金色調，正面對稱構圖，淺景深，氣氛高級。",
+    shortPrompt: "人物成為精品收藏櫃中央的主角公仔，叉腰站姿，LED聚光燈，正面對稱構圖",
+    care: "主角公仔清楚像本人，手指正確，不被層架與反光遮擋" },
+
+  /* ===== C 電影與故事 ===== */
+  { id: "21", category: "C", type: "scene", title: "我的電影海報", description: "讓自己成為電影主角。",
+    completePrompt: "人物是電影海報的主角，站在畫面中央，視線堅定望向遠方，雙手自然放在身側；穿適合劇情的深色外套，背後是雨後城市街景與逆光霧氣；電影感輪廓光，青藍與橘黃對比色，垂直海報構圖，人物約占畫面三分之二，留出少量乾淨文字區域，不要產生大量亂碼，氣氛史詩。",
+    shortPrompt: "人物成為電影海報主角，站雨後城市街景望向遠方，青藍橘黃輪廓光，垂直構圖，留少量文字區",
+    care: "人物正面完整、臉部清晰，雙手完整，不出現亂碼文字" },
+  { id: "22", category: "C", type: "scene", title: "超級英雄", description: "變成守護城市的超級英雄。",
+    completePrompt: "人物成為守護城市的原創超級英雄，站在高樓屋頂邊緣，披風隨風飄動，雙手叉腰俯瞰夜景，神情堅定友善；穿簡潔的藍紅色英雄服，胸前是原創徽章，不使用任何現有角色標誌；遠方城市燈火與晨曦，強烈輪廓光，藍紅金色調，低角度全身構圖，廣角，氣氛熱血。",
+    shortPrompt: "人物成為原創超級英雄，站高樓屋頂叉腰，披風飄揚，夜景輪廓光，低角度全身",
+    care: "英雄服合身、體型自然，臉仍是本人，雙手完整" },
+  { id: "23", category: "C", type: "scene", title: "私家偵探", description: "變成電影裡神秘的偵探。",
+    completePrompt: "人物成為電影裡神祕的私家偵探，站在雨夜小巷的路燈下，一手拿放大鏡，另一手扶著帽簷，微微側頭審視線索；穿駝色風衣與圍巾；濕潤石板路反射霓虹，空中飄著細雨；低調的單側路燈光，黑灰帶暖黃色調，中景三分法構圖，淺景深，氣氛懸疑。",
+    shortPrompt: "人物成為私家偵探，穿風衣站雨夜小巷路燈下，手持放大鏡，單側光，中景構圖",
+    care: "帽簷不遮住五官，臉部清楚可辨，雙手完整" },
+  { id: "24", category: "C", type: "scene", title: "武俠高手", description: "變成古裝武俠電影主角。",
+    completePrompt: "人物成為古裝武俠電影的高手，站在竹林間，一腳在前、一腳微彎，手持長劍指向地面，衣袍與髮絲隨風飄動，眼神沉著；穿素色長袍與腰帶，繫披風；晨霧穿過竹葉，柔和逆光，墨綠、灰白與淡金色調，略仰角全身構圖，遠景虛化，氣氛飄逸沉靜。",
+    shortPrompt: "人物成為武俠高手，站竹林持劍，衣袍隨風飄動，晨霧逆光，略仰角全身構圖",
+    care: "動作穩健自然，臉部清楚可辨，握劍手指數量正確" },
+  { id: "25", category: "C", type: "scene", title: "魔法師", description: "進入充滿魔法的奇幻世界。",
+    completePrompt: "人物成為魔法師，站在古老圖書塔的螺旋階梯旁，一手舉起法杖，杖頭發出柔和金光，另一手翻開發光的魔法書；穿深紫色長袍與星星刺繡披肩，戴尖頂帽；周圍有漂浮的書頁、蠟燭與小光點；金色魔法光映亮臉部，紫、藍與金色調，中景略仰角構圖，淺景深，氣氛神祕溫暖。",
+    shortPrompt: "人物成為魔法師，在圖書塔舉法杖翻魔法書，金色魔法光，紫藍色調，略仰角構圖",
+    care: "帽子不遮臉，法杖與書本握法自然，手指數量正確" },
+  { id: "26", category: "C", type: "scene", title: "時空旅行者", description: "穿越不同年代與世界。",
+    completePrompt: "人物是時空旅行者，站在老式火車站月台上，手拿發光的懷錶與舊皮箱，回頭望向身後漸漸出現的未來城市與古代城牆；穿復古旅行大衣與圍巾；月台上有柔和蒸汽與齒輪光圈；金橘與青藍對比光，深景深廣角構圖，全身入鏡，氣氛充滿冒險感。",
+    shortPrompt: "人物成為時空旅行者，在老火車站拿發光懷錶，回望古今城市，金橘青藍光，廣角全身",
+    care: "臉部與年齡感一致，雙手拿物自然完整，全身比例正常" },
+  { id: "27", category: "C", type: "scene", title: "科幻電影主角", description: "成為未來世界的電影人物。",
+    completePrompt: "人物成為科幻電影主角，站在太空站觀景艙，望向窗外的行星與星雲，一手輕觸半透明控制面板；穿簡約的銀白色太空制服，肩章為原創設計；冷藍色艙內燈光加行星反射的暖光，藍、銀與少量橘色，寬銀幕中景構圖，玻璃有反光，淺景深，氣氛寂靜壯闊。",
+    shortPrompt: "人物成為科幻主角，站太空站觀景艙看行星，輕觸控制面板，冷藍光，寬銀幕中景構圖",
+    care: "制服合身、不改變體型，臉部清楚，觸控的手指正確" },
+  { id: "28", category: "C", type: "scene", title: "懸疑電影主角", description: "進入充滿謎團的電影場景。",
+    completePrompt: "人物成為懸疑電影主角，站在昏暗老宅的走廊盡頭，手持手電筒照向一扇微開的門，回頭凝視鏡頭，神情警覺；穿深色外套；牆上有老照片與褪色壁紙，光束中飄著微塵；低調暗部與手電筒光，深綠、灰藍與暖黃光束，長走廊透視構圖，淺景深，氣氛緊張但不血腥。",
+    shortPrompt: "人物成為懸疑電影主角，在昏暗老宅走廊拿手電筒，低調光，長走廊構圖，不血腥",
+    care: "臉部被光束照亮而清楚，握手電筒的手完整，不出現驚悚畫面" },
+  { id: "29", category: "C", type: "scene", title: "浪漫愛情電影", description: "成為溫暖電影中的主角。",
+    completePrompt: "人物成為溫暖愛情電影的主角，在黃昏的河畔步道邊走邊微笑，手上拿著一束小花，微風吹動圍巾；穿米色針織外套與長褲；背景有漸亮的街燈、河面倒影與遠處橋梁；金色夕陽逆光與柔焦光暈，暖橘、粉紫色調，側前方跟拍中景構圖，淺景深，氣氛溫柔浪漫。",
+    shortPrompt: "人物成為愛情電影主角，黃昏河畔漫步手拿小花，金色逆光，暖橘粉紫，側前方跟拍",
+    care: "笑容自然、不過度美化，保留本人年齡感，握花的手完整" },
+  { id: "30", category: "C", type: "scene", title: "喜劇電影主角", description: "變成輕鬆幽默的電影人物。",
+    completePrompt: "人物成為喜劇電影主角，在熱鬧的廚房裡因一個小意外而誇張地驚訝，一手接住飛起的煎餅，另一手舉著鍋鏟，眼睛睜大、笑容明顯；穿印花圍裙；桌上有麵粉、蛋殼與蔬菜，麵粉在空中飄散；明亮均勻的暖色燈光，黃、紅與薄荷綠，稍廣角動態構圖，氣氛輕鬆幽默。",
+    shortPrompt: "人物成為喜劇電影主角，在廚房接住飛起的煎餅，驚喜大笑，明亮暖光，稍廣角動態構圖",
+    care: "表情有趣但不醜化人物，雙手與手指完整正確" },
+
+  /* ===== D 時空穿越 ===== */
+  { id: "31", category: "D", type: "scene", title: "古代仕女", description: "穿上古代服裝，置身古典庭院。",
+    completePrompt: "人物成為古代仕女，穿淡粉與月白色的漢服，寬袖長裙，在江南庭院的迴廊與荷花池畔漫步，手持一把繡花團扇，輕輕回眸；庭院有拱橋、垂柳與紅燈籠；柔和晨光，粉、白與黛綠色調，中景全身構圖，淺景深，氣氛典雅溫柔。",
+    shortPrompt: "人物成為古代仕女，穿漢服在江南庭院荷花池畔持團扇回眸，柔和晨光，中景全身",
+    care: "髮飾不改變臉型與髮色，持扇雙手自然完整" },
+  { id: "32", category: "D", type: "scene", title: "古代將軍", description: "成為威風凜凜的古代將軍。",
+    completePrompt: "人物成為威風凜凜的古代將軍，站在城樓高台，一手按著腰間佩劍，另一手指向遠方，披風隨風揚起，眼神堅定；穿玄黑與金色護甲、紅色披風與戰袍；背景是旌旗、城牆與黃昏雲海；金色逆光與輪廓光，黑、金、赤紅色調，低角度全身構圖，氣氛雄壯莊嚴。",
+    shortPrompt: "人物成為古代將軍，站城樓按劍指向遠方，玄黑金甲紅披風，黃昏逆光，低角度全身",
+    care: "護甲不改變本人體型，臉部清楚，按劍與指向的手指正確" },
+  { id: "33", category: "D", type: "scene", title: "古代皇帝／皇后", description: "變成古代宮廷人物。",
+    completePrompt: "人物成為古代宮廷的皇帝或皇后，端坐在金色雕龍寶座上，姿態端正，雙手自然放在扶手；穿明黃與紅色繡龍鳳的朝服，戴精緻冠飾；背景是宮殿大殿、紅柱與金色屏風，兩側有宮燈；溫暖金色柔光，紅、金、黃色調，正面對稱構圖，氣氛莊嚴華貴。",
+    shortPrompt: "人物成為古代帝后，端坐金色寶座，明黃紅色朝服，宮殿大殿，暖金柔光，正面對稱",
+    care: "冠飾不遮住臉與髮型辨識度，雙手放置自然、手指正確" },
+  { id: "34", category: "D", type: "scene", title: "1920年代人物", description: "回到復古年代的華麗生活。",
+    completePrompt: "人物回到1920年代的華麗派對，站在爵士俱樂部的階梯旁，一手舉著香檳杯，一手輕扶欄杆，笑容從容；穿復古晚禮服或三件式西裝，配珍珠項鍊或領結；背景有水晶吊燈、金色幾何裝飾與小樂隊；暖金色燈光，黑、金、酒紅色調，中景構圖，氣氛華麗歡快。",
+    shortPrompt: "人物回到1920年代爵士俱樂部，穿復古禮服舉香檳杯，水晶吊燈，暖金燈光，中景",
+    care: "復古飾品不改變髮色與臉型，持杯手完整、手指正確" },
+  { id: "35", category: "D", type: "scene", title: "1950年代人物", description: "變成復古家庭照片中的人物。",
+    completePrompt: "人物成為1950年代家庭照片中的人物，坐在碎花沙發上，旁邊有老式收音機與電視機，一手拿著咖啡杯，微笑看向鏡頭；穿復古襯衫或及膝圓裙，整潔大方；牆上有花紋壁紙與家庭相框；柔和的閃光燈感，帶微微泛黃的老照片色調，奶油、薄荷綠與粉橘色，正面中景構圖，氣氛溫馨懷舊。",
+    shortPrompt: "人物成為1950年代家庭照片人物，坐碎花沙發拿咖啡杯，老收音機，泛黃閃光燈感，中景",
+    care: "整體像老照片但臉仍清晰可辨，持杯的手完整、手指正確" },
+  { id: "36", category: "D", type: "scene", title: "1980年代人物", description: "復古服裝、髮型與攝影棚質感。",
+    completePrompt: "人物成為1980年代風格的人物，站在攝影棚的彩色背景前，姿勢自信，一手比讚；穿寬肩外套、亮色針織衫與高腰褲，配大耳環或運動頭帶；背後有霓虹幾何圖形與復古音響；攝影棚閃光燈與柔光箱，螢光粉、青藍與紫色調，微微顆粒的復古膠卷質感，中景構圖，氣氛活力復古。",
+    shortPrompt: "人物成為1980年代風格，站棚拍彩色背景前比讚，寬肩外套，螢光粉青藍，復古膠卷感",
+    care: "仍是本人的髮型與髮色，不誇張改造，比讚手指數量正確" },
+  { id: "37", category: "D", type: "scene", title: "未來世界人物", description: "進入高科技未來城市。",
+    completePrompt: "人物來到高科技的未來城市，站在空中步道，身旁有懸浮車與透明螢幕，一手輕點半空中的全息地圖，抬頭微笑；穿簡潔的白色與銀灰色未來風服裝；遠處是玻璃高樓與綠色空中花園，飛行器劃過天際；清晨冷白光與霓虹反光，青藍、白與少量紫色調，廣角全身構圖，氣氛明亮樂觀。",
+    shortPrompt: "人物來到未來城市空中步道，點按全息地圖，白銀服裝，懸浮車，冷白霓虹光，廣角全身",
+    care: "服裝簡潔合身，臉部保留本人特徵，點按的手指完整正確" },
+  { id: "38", category: "D", type: "scene", title: "太空旅行者", description: "穿上太空服探索宇宙。",
+    completePrompt: "人物穿上白色太空服，站在月球表面，頭盔面罩掀開露出清楚的臉，一手舉著小旗子，另一手向鏡頭揮手；背景是灰色月壤、環形山與升起的藍色地球；強烈單一方向的太陽光與長長的陰影，黑、灰、白加地球藍，低角度全身廣角構圖，氣氛壯闊自豪。",
+    shortPrompt: "人物穿太空服站月球表面揮手，面罩打開露出臉，藍色地球，強烈太陽光，低角度全身",
+    care: "面罩打開，臉部完整不被遮擋，太空手套手指正確" },
+  { id: "39", category: "D", type: "scene", idMode: "timeline", title: "時光旅行照片", description: "與不同年代的自己同框。",
+    tip: "這個主題會讓不同年紀的自己一起出現，年齡會自動調整。",
+    completePrompt: "畫面中有三個不同年代的同一個人並肩合照：左邊是年輕時的樣子，中間是現在的自己，右邊是更年長的樣子，彼此勾肩搭背笑著，坐在同一張老式木長椅上；各穿符合自己年代的服裝；背景是公園與老照片相框牆；溫暖午後自然光，棕與暖黃色調，橫式中景構圖，淺景深，氣氛溫馨感動。",
+    shortPrompt: "年輕時、現在、更年長的自己並肩坐老木長椅合照，各穿自己年代服裝，午後暖光，橫式中景",
+    care: "三人像同一個人，各自雙手完整，沒有多餘手臂" },
+  { id: "40", category: "D", type: "scene", idMode: "timeline", title: "年輕時的自己", description: "創造現在的自己與年輕時自己的畫面。",
+    tip: "這個主題會出現現在與二十歲的自己，年輕的那位會自動調整年齡。",
+    completePrompt: "畫面中同時出現現在的自己與約二十歲時的自己，兩人並肩坐在老家客廳的沙發上，年輕的自己拿著一本舊相簿，現在的自己指著照片微笑，像在分享回憶；各穿符合自己年代的服裝；牆上有老時鐘與相框；午後窗邊暖光，奶油、木色與淡綠色調，中景構圖，淺景深，氣氛溫馨感動。",
+    shortPrompt: "現在的自己與二十歲時的自己坐老家沙發翻舊相簿，窗邊暖光，中景，溫馨感動",
+    care: "兩人像同一個人、只有年齡不同，雙手完整，沒有多餘手臂" },
+
+  /* ===== E 趣味創意 ===== */
+  { id: "41", category: "E", type: "scene", title: "迷你小人世界", description: "把人物縮小成生活用品旁的小人。",
+    completePrompt: "人物縮小成約10到15公分高的小人，站在巨大的咖啡杯、書本、眼鏡與手機旁，形成強烈的比例反差；正吃力地搬著一顆方糖走向巨大的眼鏡，神情專注好奇；穿日常服裝；木紋桌面與物品的材質被放大，窗邊柔和自然光，暖棕與奶油色，廣角低角度構圖，前景清楚、背景虛化，氣氛有趣。",
+    shortPrompt: "人物縮小成10至15公分小人，在巨大咖啡杯、書與眼鏡旁搬方糖，窗邊自然光，廣角低角度",
+    care: "小人比例自然、五官仍像本人，雙手完整、手指正確" },
+  { id: "42", category: "E", type: "scene", title: "超級巨人", description: "把人物放大成城市巨人。",
+    completePrompt: "人物巨大到超越城市建築，站在街道中央，城市建築只到腳踝附近，自然微笑地低頭看著腳下的小車與行人，一手輕輕舉起，小心不碰到建築；穿日常外套與長褲；遠處有天際線與晚霞；金色夕陽側光，藍橘色調，低角度仰視廣角構圖，人物完整入鏡，像電影中的奇幻巨人。",
+    shortPrompt: "人物成為城市巨人，站街道中央，建築只到腳踝，微笑低頭看小車，晚霞側光，低角度廣角",
+    care: "巨人比例自然、臉部清晰，雙手完整，全身入鏡" },
+  { id: "43", category: "E", type: "scene", idMode: "petSwap", title: "人物與寵物互換", description: "讓人物與寵物交換角色。",
+    tip: "這個主題請同時上傳人物照片與寵物照片。",
+    completePrompt: "人物與寵物互換角色：寵物穿著人的日常服裝，坐在餐桌前的椅子上，用前爪拿著杯子看報紙；人物則變成寵物的可愛模樣，趴在窩裡的軟墊上，有寵物般的耳朵與尾巴，滿足地微笑；家中客廳有沙發、玩具與盆栽；窗邊柔和暖光，奶油與淺木色，中景構圖，氣氛溫馨幽默。",
+    shortPrompt: "人物與寵物互換角色：寵物穿衣坐餐桌看報紙，人物變成趴窩的可愛模樣，客廳暖光，中景",
+    care: "兩者的臉部與毛色特徵可辨，動作可愛，不醜化人物" },
+  { id: "44", category: "E", type: "scene", idMode: "petPhoto", title: "我的寵物變成人", description: "把寵物想像成人類角色。",
+    tip: "這個主題請上傳寵物的照片。",
+    completePrompt: "把寵物想像成人類角色：一位氣質溫和的人，髮色與髮型呼應寵物的毛色與花紋，眼神保留寵物的神韻；坐在陽光客廳的沙發上，手拿一杯茶與一本書，身旁擺著寵物常用的小玩具與毯子；穿與寵物毛色相襯的針織衣物；窗邊柔和自然光，暖棕與奶油色，中景構圖，淺景深，氣氛親切溫暖。",
+    shortPrompt: "把寵物變成人類角色，髮色呼應毛色，坐陽光客廳沙發喝茶看書，窗邊柔光，中景",
+    care: "這是全新的人類角色，臉部自然不嚇人，雙手完整、手指正確" },
+  { id: "45", category: "E", type: "scene", title: "我的食物變成世界", description: "站在巨大食物與料理構成的奇幻世界。",
+    completePrompt: "人物站在由巨大食物與料理構成的奇幻世界，腳下是麵條小路與飯糰丘陵，身旁有巨大的煎蛋太陽、蔬菜樹木與湯鍋湖泊，一手拿著小湯匙品嚐，驚喜微笑；穿廚師圍裙與小帽；蒸汽從地面升起，明亮暖光帶一點晨霧；黃、橘、綠與番茄紅色調，廣角略俯視構圖，氣氛豐盛歡樂。",
+    shortPrompt: "人物站在巨大食物世界，麵條小路、煎蛋太陽、湯鍋湖泊，品嚐小湯匙，暖光，廣角略俯視",
+    care: "人物比例自然、臉部清楚，握湯匙的手完整，食物不遮住臉" },
+  { id: "46", category: "E", type: "scene", title: "我的咖啡館人生", description: "成為溫暖咖啡館裡的主人。",
+    completePrompt: "人物是溫暖咖啡館的主人，站在木質吧台後，正把一杯拉花咖啡遞向前方，笑容親切；穿深色圍裙與襯衫，袖子捲起；背景有咖啡機、木架上的杯子與綠色植物、黑板菜單（文字簡單）；暖黃吊燈與窗外柔光，咖啡棕、奶油與深綠色調，中景稍側面構圖，淺景深，氣氛溫暖療癒。",
+    shortPrompt: "人物是咖啡館主人，站吧台後遞出拉花咖啡，親切微笑，暖黃吊燈，中景淺景深",
+    care: "臉部與雙手清楚完整，遞杯的手指正確，黑板不出現亂碼" },
+  { id: "47", category: "E", type: "scene", title: "我的旅行明信片", description: "把自己變成旅遊明信片主角。",
+    completePrompt: "人物成為旅遊明信片主角，站在海邊小鎮的石階步道上，戴著草帽，一手揮手、一手提著旅行袋，笑容開朗；穿輕便夏日服裝；背景有白色房屋、藍色海與遠方帆船，畫面有白色明信片外框與郵票造型的小圖案，文字區保持簡潔；明亮晴天光，天藍、白與橘紅色調，中景全身構圖，氣氛輕鬆愉快。",
+    shortPrompt: "人物成為旅遊明信片主角，戴草帽在海邊小鎮石階揮手，白色明信片邊框，晴天光，中景全身",
+    care: "帽子不遮住臉，臉部清楚，雙手完整，不出現亂碼文字" },
+  { id: "48", category: "E", type: "scene", title: "我的雜誌封面", description: "成為時尚生活雜誌封面人物。",
+    completePrompt: "人物成為生活風格雜誌封面主角，時尚但自然，站在簡潔的淺色背景前，半身置中，雙手自然交疊，微微側身看向鏡頭，親切微笑；穿質感好的針織衫與外套；棚拍主光加柔和補光，膚色自然，米白與淡藍色調，上方與側邊保留少量乾淨的文字區域，不要產生大量亂碼，氣氛優雅自在。",
+    shortPrompt: "人物成為生活雜誌封面主角，半身置中，淺色簡潔背景，棚拍柔光，留少量乾淨文字區",
+    care: "保留自然膚質與年齡感，不過度修圖，雙手完整" },
+  { id: "49", category: "E", type: "scene", title: "我的夢想職業", description: "變成自己最想體驗的職業。",
+    tip: "想體驗別的職業，可以把提示詞裡的「客機機長」改成你的夢想職業，例如畫家、廚師、醫生。",
+    completePrompt: "人物實現夢想職業，成為客機機長，坐在明亮的駕駛艙左座，雙手握著操縱桿，轉頭微笑看向鏡頭；穿深藍制服、金色肩章與機長帽；儀表板燈光閃爍，擋風玻璃外是雲海與日出；金色晨光加儀表柔光，深藍、金與白色調，近景半身構圖，淺景深，氣氛自信踏實。",
+    shortPrompt: "人物成為客機機長，坐駕駛艙握操縱桿微笑，深藍制服，雲海日出金色晨光，近景半身",
+    care: "帽子不遮臉，臉部保留本人年齡感，握操縱桿手指正確" },
+  { id: "50", category: "E", type: "scene", title: "超誇張搞笑變身", description: "創造有趣、誇張但不醜化人物的搞笑作品。",
+    tip: "想換別的搞笑造型，可以改掉提示詞裡的「彩虹假髮」，例如換成大鬍子或大帽子。",
+    completePrompt: "人物做出有趣但不醜化的誇張搞笑變身：戴著超大的派對眼鏡與蓬鬆的彩虹假髮，開懷大笑、眼睛睜圓，雙手高舉像在歡呼，身邊噴出彩色紙花與氣球；穿誇張的亮色條紋外套；背景是繽紛的派對佈置；明亮均勻的燈光，紅、黃、藍、粉紅，稍廣角略仰角構圖，氣氛歡樂爆笑。",
+    shortPrompt: "人物戴超大派對眼鏡與彩虹假髮大笑歡呼，彩帶氣球，繽紛派對，明亮燈光，略仰角廣角",
+    care: "五官不變形、不醜化，臉仍是本人，雙手完整" }
+];
+
+/* 組合提示詞：主題 + 風格 + 模式（full 完整／short 簡潔） */
+function buildPrompt(theme, style, mode) {
+  const idKey = theme.idMode || "normal";
+  const identity = IDENTITY[idKey];
+  if (mode === "short") {
+    return "生成圖片：" + identity.short + theme.shortPrompt +
+      "。風格：" + style.short + "。人物完整、手腳自然、不變形。";
+  }
+  const index = THEMES.indexOf(theme);
+  const tail = TAILS[index % TAILS.length];
+  return "請生成一張圖片。" + identity.full + theme.completePrompt +
+    CONNECTORS[theme.type] + style.full + "。" +
+    theme.care + "，" + tail + "，畫質高清、細節清晰。";
+}
+</script>
+
+<script>
+/* =====================================================================
+   畫面程式：目前選到的主題、風格都存在這幾個變數
+   ===================================================================== */
+let selectedTheme = null;            // 目前選的主題（還沒選就是 null）
+let selectedStyle = STYLES[0];       // 目前選的風格（預設：01 寫實照片風）
+let promptMode = "full";             // full 完整／short 簡潔
+let generated = null;                // 按過「產生」後記住 { theme, style }
+let copied = false;
+
+const $ = (sel) => document.querySelector(sel);
+const themeButtons = {};
+const styleButtons = {};
+let copyTimer = null;
+
+function makeNumberedButton(cls, id, label) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = cls;
+  b.setAttribute("aria-pressed", "false");
+  const no = document.createElement("span");
+  no.className = "no";
+  no.textContent = id;
+  const ti = document.createElement("span");
+  ti.className = "ti";
+  ti.textContent = label;
+  b.append(no, ti);
+  return b;
+}
+
+function buildThemeList() {
+  const host = $("#themeScroll");
+  CATEGORIES.forEach((cat) => {
+    const block = document.createElement("div");
+    block.className = "cat";
+    block.style.setProperty("--cat", cat.color);
+    block.setAttribute("role", "group");
+    block.setAttribute("aria-label", cat.letter + " " + cat.name);
+
+    const rail = document.createElement("div");
+    rail.className = "rail";
+    rail.setAttribute("aria-hidden", "true");
+    const letter = document.createElement("span");
+    letter.textContent = cat.letter;
+    const name = document.createElement("span");
+    name.textContent = cat.name;
+    rail.append(letter, name);
+
+    const grid = document.createElement("div");
+    grid.className = "theme-grid";
+    THEMES.filter((t) => t.category === cat.letter).forEach((t) => {
+      const b = makeNumberedButton("theme-btn", t.id, t.title);
+      b.addEventListener("click", () => selectTheme(t));
+      themeButtons[t.id] = b;
+      grid.appendChild(b);
+    });
+
+    block.append(rail, grid);
+    host.appendChild(block);
+  });
+}
+
+function buildStyleList() {
+  const host = $("#styleList");
+  STYLES.forEach((s) => {
+    const b = makeNumberedButton("style-btn", s.id, s.name);
+    b.addEventListener("click", () => selectStyle(s));
+    styleButtons[s.id] = b;
+    host.appendChild(b);
+  });
+}
+
+function selectTheme(t) {
+  selectedTheme = t;
+  hideNotice();
+  copied = false;
+  updateUI();
+}
+
+function selectStyle(s) {
+  selectedStyle = s;
+  copied = false;
+  updateUI();
+}
+
+function isStale() {
+  return !!(generated && selectedTheme &&
+    (generated.theme.id !== selectedTheme.id || generated.style.id !== selectedStyle.id));
+}
+
+function currentPrompt() {
+  return buildPrompt(generated.theme, generated.style, promptMode);
+}
+
+function updateSummary() {
+  const body = $("#summaryBody");
+  body.textContent = "";
+  const add = (cls, text) => {
+    const p = document.createElement("p");
+    p.className = cls;
+    p.textContent = text;
+    body.appendChild(p);
+  };
+  if (selectedTheme) {
+    add("line", "主題：" + selectedTheme.id + " " + selectedTheme.title);
+    add("desc", selectedTheme.description);
+  } else {
+    add("empty", "還沒選主題，請先在左邊點一個。");
+  }
+  add("line", "風格：" + selectedStyle.id + " " + selectedStyle.name);
+  if (selectedTheme && selectedTheme.tip) add("tip", selectedTheme.tip);
+}
+
+function updateSteps() {
+  const done = { 1: !!selectedTheme, 2: !!selectedTheme };
+  let nowSet = false;
+  document.querySelectorAll("#howto li").forEach((li) => {
+    const step = Number(li.dataset.step);
+    const isDone = !!done[step];
+    li.classList.toggle("done", isDone);
+    const tag = li.querySelector(".tag");
+    let now = false;
+    if (!isDone && !nowSet && step <= 4) {
+      // 已選完主題時，下一步直接指到第 3 步
+      now = true;
+      nowSet = true;
+    }
+    li.classList.toggle("now", now);
+    tag.textContent = isDone ? "已完成" : (now ? "現在做這一步" : "");
+  });
+}
+
+function updateResult() {
+  const wrap = $("#result");
+  if (!generated) {
+    wrap.hidden = true;
+    $("#howto").hidden = false;
+    return;
+  }
+  $("#howto").hidden = true;
+  wrap.hidden = false;
+
+  $("#modeFull").setAttribute("aria-pressed", String(promptMode === "full"));
+  $("#modeShort").setAttribute("aria-pressed", String(promptMode === "short"));
+
+  const text = currentPrompt();
+  const box = $("#promptBox");
+  box.textContent = text;
+  $("#count").textContent = "共 " + text.length + " 個字（" +
+    (promptMode === "full" ? "完整" : "簡潔") + "提示詞）";
+
+  const stale = isStale();
+  $("#stale").hidden = !stale;
+  box.classList.toggle("dim", stale);
+
+  const tip = $("#resTip");
+  if (generated.theme.tip) {
+    tip.textContent = "小提醒：" + generated.theme.tip;
+    tip.hidden = false;
+  } else {
+    tip.hidden = true;
+  }
+
+  const cb = $("#copyBtn");
+  cb.disabled = stale;
+  cb.classList.toggle("done", copied && !stale);
+  cb.textContent = copied && !stale ? "已複製！去貼上吧" : "複製提示詞";
+}
+
+function updateUI() {
+  Object.entries(themeButtons).forEach(([id, b]) =>
+    b.setAttribute("aria-pressed", String(!!selectedTheme && selectedTheme.id === id)));
+  Object.entries(styleButtons).forEach(([id, b]) =>
+    b.setAttribute("aria-pressed", String(selectedStyle.id === id)));
+  updateSummary();
+  updateSteps();
+  updateResult();
+}
+
+function showNotice(msg) {
+  const n = $("#notice");
+  n.textContent = msg;
+  n.hidden = false;
+}
+function hideNotice() { $("#notice").hidden = true; }
+
+function generate() {
+  if (!selectedTheme) {
+    showNotice("請先在左邊「① 選一個有趣主題」點一個喔！");
+    const panel = $("#themePanel");
+    panel.classList.add("nudge");
+    setTimeout(() => panel.classList.remove("nudge"), 1800);
+    return;
+  }
+  hideNotice();
+  generated = { theme: selectedTheme, style: selectedStyle };
+  copied = false;
+  updateUI();
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* 改用備用方式 */ }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+async function onCopy() {
+  if (!generated || isStale()) return;
+  const ok = await copyText(currentPrompt());
+  if (ok) {
+    copied = true;
+    hideNotice();
+    updateResult();
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => { copied = false; updateResult(); }, 4000);
+  } else {
+    showNotice("這台電腦沒辦法自動複製，請用滑鼠選取框內文字，再按 Ctrl 加 C。");
+    const range = document.createRange();
+    range.selectNodeContents($("#promptBox"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+buildThemeList();
+buildStyleList();
+$("#genBtn").addEventListener("click", generate);
+$("#modeFull").addEventListener("click", () => { promptMode = "full"; copied = false; updateResult(); });
+$("#modeShort").addEventListener("click", () => { promptMode = "short"; copied = false; updateResult(); });
+$("#copyBtn").addEventListener("click", onCopy);
+updateUI();
+</script>
+</body>
+</html>
